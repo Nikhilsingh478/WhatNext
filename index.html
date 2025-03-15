@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatNext</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6L9 17l-5-5'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Draggable.min.js"></script>
+</head>
+<body class="bg-[#1a1a1a] min-h-screen font-['Plus_Jakarta_Sans'] text-white">
+    <div class="container mx-auto px-4 py-8">
+        <header class="flex items-center mb-8">
+            <button id="addTaskBtn" class="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </button>
+        </header>
+
+        <div id="taskContainer" class="relative">
+            <!-- Tasks will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Task Form Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-[#2a2a2a] p-6 rounded-lg w-full max-w-md mx-4">
+            <h2 class="text-xl font-semibold mb-4">Add New Task</h2>
+            <form id="taskForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Title/Topic</label>
+                    <input type="text" id="taskTitle" class="w-full px-3 py-2 bg-[#3a3a3a] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Date & Time</label>
+                    <input type="datetime-local" id="taskDateTime" class="w-full px-3 py-2 bg-[#3a3a3a] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Description</label>
+                    <textarea id="taskDescription" rows="3" class="w-full px-3 py-2 bg-[#3a3a3a] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelTask" class="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-700 transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html> 
