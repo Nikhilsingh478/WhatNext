@@ -12,18 +12,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Draggable.min.js"></script>
 </head>
 <body class="bg-[#1a1a1a] min-h-screen font-['Plus_Jakarta_Sans'] text-white">
-    <div class="container mx-auto px-4 py-8">
-        <header class="flex items-center mb-8">
-            <button id="addTaskBtn" class="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors duration-300">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-            </button>
-        </header>
-
-        <div id="taskContainer" class="relative">
-            <!-- Tasks will be dynamically added here -->
+    <div id="top-bar">
+        <div id="add-card-button" class="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors duration-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
         </div>
+        <div id="delete-zone">
+            <span id="dustbin-icon">🗑️</span>
+        </div>
+    </div>
+
+    <div id="cards-container" class="relative">
+        <!-- Tasks will be dynamically added here -->
     </div>
 
     <!-- Task Form Modal -->

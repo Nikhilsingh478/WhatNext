@@ -9,11 +9,13 @@ const cardColors = [
 ];
 
 // DOM Elements
-const addTaskBtn = document.getElementById('addTaskBtn');
+const addCardButton = document.getElementById('add-card-button');
 const taskModal = document.getElementById('taskModal');
 const taskForm = document.getElementById('taskForm');
 const cancelTaskBtn = document.getElementById('cancelTask');
-const taskContainer = document.getElementById('taskContainer');
+const cardsContainer = document.getElementById('cards-container');
+const deleteZone = document.getElementById('delete-zone');
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 // State
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -27,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Event Listeners
-addTaskBtn.addEventListener('click', () => {
+addCardButton.addEventListener('click', () => {
     gsap.to(taskModal, {
         display: 'flex',
         opacity: 1,
@@ -78,15 +80,9 @@ function closeModal() {
 }
 
 function renderTasks() {
-    taskContainer.innerHTML = '';
+    cardsContainer.innerHTML = '';
     tasks.forEach(task => {
-        const taskElement = renderTask(task);
-        if (task.position) {
-            gsap.set(taskElement, {
-                x: task.position.x,
-                y: task.position.y
-            });
-        }
+        renderTask(task);
     });
 }
 
@@ -99,7 +95,7 @@ function renderTask(task) {
 
     // Set initial position if it's a new task
     if (!task.position || (task.position.x === 0 && task.position.y === 0)) {
-        const existingCards = taskContainer.querySelectorAll('.task-card');
+        const existingCards = cardsContainer.querySelectorAll('.task-card');
         const randomX = Math.random() * (window.innerWidth / 3);
         const randomY = Math.random() * (window.innerHeight / 3);
         task.position = { 
@@ -127,25 +123,10 @@ function renderTask(task) {
                     ${task.description ? `<p class="text-base opacity-90">${task.description}</p>` : ''}
                 </div>
             </div>
-            <button class="delete-btn" onclick="deleteTask(${task.id})">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
         </div>
     `;
 
-    taskContainer.appendChild(taskElement);
-
-    // Initial animation for new cards
-    if (!task.position || (task.position.x === 0 && task.position.y === 0)) {
-        gsap.from(taskElement, {
-            scale: 0.8,
-            opacity: 0,
-            duration: 0.5,
-            ease: 'back.out(1.7)'
-        });
-    }
+    cardsContainer.appendChild(taskElement);
 
     // Set initial position
     gsap.set(taskElement, {
@@ -156,37 +137,134 @@ function renderTask(task) {
     // Initialize draggable
     Draggable.create(taskElement, {
         type: "x,y",
-        bounds: taskContainer,
+        bounds: cardsContainer,
         inertia: true,
         edgeResistance: 0.65,
         onPress: function() {
-            gsap.to(this.target, {
-                scale: 1.05,
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
-                duration: 0.2,
-                ease: "power2.out"
-            });
+            this.startY = this.y;
             this.target.classList.add('dragging');
-            gsap.set(this.target, { zIndex: 1000 });
+            gsap.set(this.target, { zIndex: 100 });
         },
         onDrag: function() {
+            const cardRect = this.target.getBoundingClientRect();
+            const deleteZoneRect = deleteZone.getBoundingClientRect();
+            
+            // Check if card is over delete zone
+            const isOverDeleteZone = cardRect.top < deleteZoneRect.bottom;
+
+            if (isOverDeleteZone && !deleteZone.classList.contains('active')) {
+                deleteZone.classList.add('active');
+                gsap.to(this.target, {
+                    scale: 0.95,
+                    duration: 0.2
+                });
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
+            } else if (!isOverDeleteZone && deleteZone.classList.contains('active')) {
+                deleteZone.classList.remove('active');
+                gsap.to(this.target, {
+                    scale: 1,
+                    duration: 0.2
+                });
+            }
+
+            // Update task position
             task.position.x = this.x;
             task.position.y = this.y;
         },
-        onRelease: function() {
-            gsap.to(this.target, {
-                scale: 1,
-                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
-                duration: 0.3,
-                ease: "elastic.out(1, 0.5)"
-            });
+        onDragEnd: function() {
+            const cardRect = this.target.getBoundingClientRect();
+            const deleteZoneRect = deleteZone.getBoundingClientRect();
+            const isOverDeleteZone = cardRect.top < deleteZoneRect.bottom;
+
+            if (isOverDeleteZone) {
+                animateCardDeletion(this.target, () => {
+                    tasks = tasks.filter(t => t.id !== task.id);
+                    saveTasks();
+                });
+            } else {
+                gsap.to(this.target, {
+                    scale: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            }
+
+            deleteZone.classList.remove('active');
             this.target.classList.remove('dragging');
-            gsap.set(this.target, { zIndex: 'auto' });
+            gsap.set(this.target, { zIndex: 1 });
             saveTasks();
         }
     });
 
     return taskElement;
+}
+
+function deleteWithAnimation(card) {
+    const numCircles = 20;
+    const circles = [];
+
+    // Get the computed background color of the card
+    const cardColor = window.getComputedStyle(card).backgroundColor;
+
+    // Create small circles for explosion effect
+    for (let i = 0; i < numCircles; i++) {
+        const circle = document.createElement("div");
+        circle.style.width = "10px";
+        circle.style.height = "10px";
+        circle.style.borderRadius = "50%";
+        circle.style.backgroundColor = cardColor;
+        circle.style.position = "absolute";
+        circle.style.opacity = "0";
+        circle.style.zIndex = "1000";
+        document.body.appendChild(circle);
+        circles.push(circle);
+    }
+
+    // Position circles at card center
+    const rect = card.getBoundingClientRect();
+    circles.forEach(circle => {
+        circle.style.left = `${rect.left + rect.width / 2}px`;
+        circle.style.top = `${rect.top + rect.height / 2}px`;
+    });
+
+    // GSAP Animation Timeline
+    const tl = gsap.timeline();
+
+    tl.to(card, {
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.4,
+        ease: "power2.inOut"
+    }).set(card, { display: "none" });
+
+    tl.to(circles, {
+        opacity: 1,
+        duration: 0.1
+    }, "-=0.2");
+
+    tl.to(circles, {
+        x: () => Math.random() * 200 - 100,
+        y: () => Math.random() * 200 - 100,
+        scale: 0.5,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        onComplete: () => {
+            circles.forEach(circle => circle.remove());
+            card.remove();
+        }
+    });
+
+    return tl; // Return the timeline for chaining if needed
+}
+
+function animateCardDeletion(card, onComplete) {
+    const tl = deleteWithAnimation(card);
+    if (onComplete) {
+        tl.eventCallback("onComplete", onComplete);
+    }
 }
 
 function toggleTask(id) {
@@ -234,19 +312,9 @@ function handleTouchEnd(event, id) {
 function deleteTask(id) {
     const taskElement = document.querySelector(`[data-id="${id}"]`);
     if (taskElement) {
-        // First scale down and rotate slightly
-        gsap.to(taskElement, {
-            scale: 0,
-            rotation: -10,
-            opacity: 0,
-            duration: 0.3,
-            ease: "back.in(1.7)",
-            onComplete: () => {
-                taskElement.remove();
-                tasks = tasks.filter(t => t.id !== id);
-                saveTasks();
-            }
-        });
+        deleteWithAnimation(taskElement);
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
     }
 }
 
@@ -267,18 +335,18 @@ function formatDateTime(dateTime) {
 
 function initializeGSAPAnimations() {
     // Add button hover animation
-    gsap.to(addTaskBtn, {
+    gsap.to(addCardButton, {
         scale: 1.1,
         duration: 0.3,
         paused: true,
         ease: 'power2.out'
     });
 
-    addTaskBtn.addEventListener('mouseenter', () => {
-        gsap.to(addTaskBtn, { scale: 1.1, duration: 0.3 });
+    addCardButton.addEventListener('mouseenter', () => {
+        gsap.to(addCardButton, { scale: 1.1, duration: 0.3 });
     });
 
-    addTaskBtn.addEventListener('mouseleave', () => {
-        gsap.to(addTaskBtn, { scale: 1, duration: 0.3 });
+    addCardButton.addEventListener('mouseleave', () => {
+        gsap.to(addCardButton, { scale: 1, duration: 0.3 });
     });
-} 
+}
