@@ -159,13 +159,26 @@
     }
 
     .task-card .checkbox {
-        width: 1.25rem;
-        height: 1.25rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-width: 2px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .task-card .checkbox svg {
-        width: 0.875rem;
-        height: 0.875rem;
+        width: 1rem;
+        height: 1rem;
+    }
+
+    /* Add padding around checkbox for larger touch target */
+    .task-card .checkbox::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        right: -8px;
+        bottom: -8px;
     }
 }
 

@@ -17,6 +17,8 @@ const taskContainer = document.getElementById('taskContainer');
 
 // State
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let lastToggleTime = 0;
+const TOGGLE_DELAY = 300; // 300ms delay between toggles
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -109,7 +111,12 @@ function renderTask(task) {
     taskElement.innerHTML = `
         <div class="relative">
             <div class="flex items-start gap-4">
-                <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${task.id})">
+                <div class="checkbox ${task.completed ? 'checked' : ''}" 
+                    onclick="toggleTask(${task.id})"
+                    ontouchend="handleTouchEnd(event, ${task.id})"
+                    role="checkbox"
+                    aria-checked="${task.completed}"
+                    tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -183,6 +190,12 @@ function renderTask(task) {
 }
 
 function toggleTask(id) {
+    const now = Date.now();
+    if (now - lastToggleTime < TOGGLE_DELAY) {
+        return; // Ignore rapid clicks
+    }
+    lastToggleTime = now;
+
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex !== -1) {
         tasks[taskIndex].completed = !tasks[taskIndex].completed;
@@ -190,6 +203,7 @@ function toggleTask(id) {
         
         const checkbox = document.querySelector(`[data-id="${id}"] .checkbox`);
         checkbox.classList.toggle('checked');
+        checkbox.setAttribute('aria-checked', tasks[taskIndex].completed);
 
         if (tasks[taskIndex].completed) {
             const deleteTimeout = setTimeout(() => {
@@ -209,6 +223,12 @@ function toggleTask(id) {
             }
         }
     }
+}
+
+function handleTouchEnd(event, id) {
+    event.preventDefault();
+    event.stopPropagation(); // Prevent event bubbling
+    toggleTask(id);
 }
 
 function deleteTask(id) {
